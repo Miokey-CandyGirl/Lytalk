@@ -1,0 +1,1614 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>青聊 - T听</title>
+  <link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+  <style>
+    /* ===== Reset & Base ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      font-size: 14px;
+      color: #262626;
+      -webkit-font-smoothing: antialiased;
+    }
+    button { font-family: inherit; cursor: pointer; border: none; background: none; }
+    input { font-family: inherit; outline: none; border: none; }
+
+    :root {
+      --drawer-w: 300px;
+      --menu-w: 260px;
+      --primary: #14B8A6;
+      --primary-600: #0D9488;
+      --primary-400: #2DD4BF;
+      --primary-300: #5EEAD4;
+      --primary-100: #CCFBF1;
+      --primary-50: #F0FDFA;
+      --radius: 12px;
+      --radius-lg: 20px;
+      --transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ===== App Shell ===== */
+    .app {
+      display: flex;
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: linear-gradient(135deg, #F0FDFA 0%, #CCFBF1 50%, #F0FDFA 100%);
+      position: relative;
+    }
+    .app::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse at 0% 0%, rgba(94,234,212,0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 100% 100%, rgba(45,212,191,0.1) 0%, transparent 50%);
+      pointer-events: none; z-index: 0;
+      animation: bgShift 20s ease-in-out infinite alternate;
+    }
+    @keyframes bgShift {
+      0% { opacity: 0.7; }
+      100% { opacity: 1; }
+    }
+
+    /* ===== Side Menu ===== */
+    .side-menu {
+      position: absolute;
+      top: 8px; bottom: 8px; left: 8px;
+      width: var(--menu-w);
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 8px 32px rgba(20,184,166,0.15);
+      border: 1px solid rgba(255,255,255,0.6);
+      z-index: 25;
+      transform: translateX(-120%);
+      transition: transform var(--transition);
+      display: flex;
+      flex-direction: column;
+      padding: 20px 12px;
+    }
+    .side-menu.open { transform: translateX(0); }
+
+    .menu-header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 0 8px 16px;
+      border-bottom: 1px solid rgba(94,234,212,0.15);
+      margin-bottom: 10px;
+    }
+    .menu-logo {
+      width: 40px; height: 40px;
+      border-radius: var(--radius);
+      background: linear-gradient(135deg, var(--primary-400), var(--primary-600));
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 3px 10px rgba(20,184,166,0.3);
+      flex-shrink: 0;
+    }
+    .menu-logo svg { width: 22px; height: 22px; color: white; }
+    .menu-brand { flex: 1; }
+    .menu-brand .name { font-size: 16px; font-weight: 700; color: var(--primary-600); }
+    .menu-brand .slogan { font-size: 11px; color: #8C8C8C; margin-top: 2px; }
+    .menu-close {
+      width: 32px; height: 32px; border-radius: 8px;
+      color: #8C8C8C;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .menu-close:hover { background: rgba(94,234,212,0.1); color: var(--primary); }
+    .menu-close svg { width: 18px; height: 18px; }
+
+    .menu-list {
+      flex: 1; overflow-y: auto;
+      display: flex; flex-direction: column; gap: 2px; padding: 4px 0;
+    }
+    .menu-list::-webkit-scrollbar { width: 3px; }
+    .menu-list::-webkit-scrollbar-thumb { background: rgba(94,234,212,0.2); border-radius: 2px; }
+
+    .menu-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 10px;
+      font-size: 14px; color: #404040;
+      transition: all 0.2s;
+      position: relative; text-align: left; width: 100%;
+    }
+    .menu-item svg { width: 18px; height: 18px; flex-shrink: 0; color: #636363; transition: all 0.2s; }
+    .menu-item:hover { background: rgba(94,234,212,0.1); color: var(--primary-600); }
+    .menu-item:hover svg { color: var(--primary); transform: scale(1.1); }
+    .menu-item.active {
+      background: linear-gradient(135deg, var(--primary-400), var(--primary-600));
+      color: white;
+      box-shadow: 0 3px 10px rgba(20,184,166,0.25);
+    }
+    .menu-item.active svg { color: white; }
+    .menu-item .badge {
+      margin-left: auto; min-width: 18px; height: 18px; border-radius: 9px;
+      background: #EF4444; color: white; font-size: 10px; font-weight: 600;
+      display: flex; align-items: center; justify-content: center; padding: 0 5px;
+    }
+    .menu-item.add-friend { color: var(--primary); }
+    .menu-item.add-friend svg { color: var(--primary); }
+
+    .menu-divider { height: 1px; background: rgba(94,234,212,0.15); margin: 8px 12px; }
+
+    .menu-footer {
+      display: flex; gap: 6px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(94,234,212,0.15);
+    }
+    .menu-footer .menu-item { flex: 1; flex-direction: column; gap: 2px; padding: 8px 4px; font-size: 10px; }
+    .menu-footer .menu-item svg { width: 18px; height: 18px; }
+
+    /* ===== Overlay ===== */
+    .overlay {
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,0.15);
+      z-index: 20;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .overlay.show { opacity: 1; pointer-events: auto; }
+
+    /* ===== Friend List Drawer ===== */
+    .drawer {
+      width: var(--drawer-w);
+      height: calc(100% - 16px);
+      margin: 8px 0 8px 8px;
+      background: rgba(255,255,255,0.82);
+      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(255,255,255,0.6);
+      box-shadow: 0 4px 24px rgba(20,184,166,0.08);
+      display: flex; flex-direction: column;
+      flex-shrink: 0;
+      z-index: 10;
+      transition: width var(--transition), opacity var(--transition), margin var(--transition);
+      position: relative; overflow: hidden;
+    }
+    .drawer.collapsed {
+      width: 0; margin-right: 0;
+      border-color: transparent; opacity: 0; box-shadow: none; overflow: hidden;
+    }
+    .drawer.collapsed .drawer-inner { transform: translateX(-20px); opacity: 0; }
+
+    .drawer-inner {
+      width: var(--drawer-w); height: 100%;
+      display: flex; flex-direction: column;
+      transition: transform var(--transition), opacity var(--transition);
+    }
+
+    .drawer-top {
+      height: 60px; padding: 0 12px;
+      display: flex; align-items: center; gap: 8px;
+      border-bottom: 1px solid rgba(94,234,212,0.12);
+      flex-shrink: 0;
+    }
+
+    .logo-btn {
+      width: 38px; height: 38px; border-radius: var(--radius);
+      background: linear-gradient(135deg, #2DD4BF, #0D9488);
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.25s;
+      flex-shrink: 0; color: white;
+      box-shadow: 0 3px 10px rgba(20,184,166,0.25);
+      position: relative; overflow: hidden;
+    }
+    .logo-btn::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.2), transparent);
+    }
+    .logo-btn:hover { transform: translateY(-1px) scale(1.05); box-shadow: 0 5px 15px rgba(20,184,166,0.35); }
+    .logo-btn svg { width: 20px; height: 20px; position: relative; z-index: 1; }
+
+    .search-wrap { position: relative; flex: 1; min-width: 0; }
+    .search-wrap .s-icon {
+      position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+      width: 15px; height: 15px; color: #B8B8B8;
+      pointer-events: none; transition: color 0.2s;
+    }
+    .search-wrap input {
+      width: 100%; height: 36px; border-radius: 18px;
+      background: rgba(94,234,212,0.08);
+      padding: 0 36px 0 34px;
+      font-size: 13px; color: #262626; transition: all 0.25s;
+    }
+    .search-wrap input::placeholder { color: #B8B8B8; }
+    .search-wrap input:focus { background: white; box-shadow: 0 0 0 3px rgba(94,234,212,0.15); }
+    .search-wrap input:focus ~ .s-icon { color: var(--primary); }
+    .search-filter-btn {
+      position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+      width: 28px; height: 28px; border-radius: 14px; color: #8C8C8C;
+      display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+    }
+    .search-filter-btn:hover { background: rgba(94,234,212,0.15); color: var(--primary); }
+    .search-filter-btn svg { width: 14px; height: 14px; }
+
+    .drawer-list { flex: 1; overflow-y: auto; padding: 6px 0; }
+    .drawer-list::-webkit-scrollbar { width: 4px; }
+    .drawer-list::-webkit-scrollbar-thumb { background: rgba(94,234,212,0.2); border-radius: 2px; }
+
+    .self-item {
+      height: 60px; padding: 0 12px; margin: 0 6px; border-radius: var(--radius);
+      display: flex; align-items: center; gap: 10px;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .self-item:hover { background: rgba(94,234,212,0.08); }
+    .self-item .av {
+      width: 40px; height: 40px; border-radius: var(--radius);
+      background: linear-gradient(135deg, var(--primary-400), var(--primary-600));
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-weight: 600; font-size: 14px;
+      position: relative; flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(20,184,166,0.2);
+    }
+    .self-item .av .dot {
+      position: absolute; bottom: -1px; right: -1px;
+      width: 12px; height: 12px; border-radius: 50%; background: #34D399; border: 2.5px solid white;
+    }
+    .self-item .info { flex: 1; min-width: 0; }
+    .self-item .nm { font-size: 14px; font-weight: 600; color: #262626; }
+    .self-item .st { font-size: 11px; color: var(--primary); margin-top: 2px; }
+
+    .grp-toggle { display: none; }
+    .grp-label {
+      display: flex; align-items: center; gap: 6px;
+      height: 32px; padding: 0 16px; cursor: pointer;
+      font-size: 11px; font-weight: 600; color: #8C8C8C;
+      text-transform: uppercase; letter-spacing: 0.8px;
+      user-select: none; transition: color 0.2s;
+    }
+    .grp-label:hover { color: var(--primary); }
+    .grp-label .chev { width: 12px; height: 12px; transition: transform 0.25s; flex-shrink: 0; }
+    .grp-label .star { width: 11px; height: 11px; color: var(--primary); flex-shrink: 0; }
+    .grp-label .cnt { color: #B8B8B8; font-weight: 500; margin-left: 2px; }
+    .grp-items { max-height: 2000px; overflow: hidden; transition: max-height 0.35s; }
+    .grp-toggle:not(:checked) ~ .grp-items { max-height: 0; }
+    .grp-toggle:not(:checked) ~ .grp-label .chev { transform: rotate(-90deg); }
+
+    .f-item {
+      height: 58px; padding: 0 12px; margin: 0 6px; border-radius: var(--radius);
+      display: flex; align-items: center; gap: 10px;
+      cursor: pointer; transition: all 0.2s; position: relative;
+    }
+    .f-item:hover { background: rgba(94,234,212,0.08); }
+    .f-item.sel {
+      background: linear-gradient(135deg, rgba(94,234,212,0.15), rgba(45,212,191,0.1));
+      box-shadow: 0 2px 8px rgba(20,184,166,0.1);
+    }
+    .f-item.sel::before {
+      content: ''; position: absolute;
+      left: -6px; top: 50%; transform: translateY(-50%);
+      width: 3px; height: 24px; background: var(--primary); border-radius: 0 3px 3px 0;
+    }
+    .f-item .av {
+      width: 40px; height: 40px; border-radius: var(--radius);
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-weight: 600; font-size: 14px;
+      position: relative; flex-shrink: 0;
+    }
+    .f-item .av .dot {
+      position: absolute; bottom: -1px; right: -1px;
+      width: 11px; height: 11px; border-radius: 50%; border: 2px solid white;
+    }
+    .f-item .av .dot.on { background: #34D399; }
+    .f-item .av .dot.aw { background: #FBBF24; }
+    .f-item .av .dot.by { background: #F87171; }
+    .f-item .av .dot.off { background: #DBDBDB; }
+    .f-item .info { flex: 1; min-width: 0; }
+    .f-item .nr { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .f-item .nm { font-size: 14px; font-weight: 500; color: #262626; }
+    .f-item.sel .nm { font-weight: 600; color: var(--primary-600); }
+    .f-item .tm { font-size: 10px; color: #B8B8B8; flex-shrink: 0; }
+    .f-item .pr { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: 3px; }
+    .f-item .pv {
+      font-size: 12px; color: #8C8C8C;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1;
+    }
+    .f-item .bd {
+      min-width: 18px; height: 18px; border-radius: 9px;
+      background: #EF4444; color: white; font-size: 10px; font-weight: 600;
+      display: flex; align-items: center; justify-content: center; padding: 0 5px; flex-shrink: 0;
+    }
+    .f-item .bd.pm { background: var(--primary); }
+    .f-item.group { height: 54px; }
+
+    .more-dots {
+      width: 28px; height: 28px; border-radius: 50%; color: #B8B8B8;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; transition: all 0.2s;
+      flex-shrink: 0; position: absolute; right: 8px;
+    }
+    .f-item:hover .more-dots, .f-item.sel .more-dots { opacity: 1; }
+    .more-dots:hover { background: rgba(94,234,212,0.12); color: var(--primary); }
+    .more-dots svg { width: 14px; height: 14px; }
+
+    /* ===== Main Content Panel ===== */
+    .main {
+      flex: 1; display: flex; flex-direction: column;
+      min-width: 0; margin: 8px;
+      border-radius: var(--radius-lg);
+      background: rgba(255,255,255,0.65);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      box-shadow: 0 4px 24px rgba(20,184,166,0.08);
+      border: 1px solid rgba(255,255,255,0.6);
+      overflow: hidden; position: relative; z-index: 5;
+      transition: margin-left var(--transition);
+    }
+
+    /* Header */
+    .main-header {
+      height: 60px; padding: 0 16px;
+      display: flex; align-items: center;
+      border-bottom: 1px solid rgba(94,234,212,0.12);
+      flex-shrink: 0;
+      background: rgba(255,255,255,0.4);
+      position: relative;
+      z-index: 6;
+    }
+    .mh-left {
+      display: flex; align-items: center; gap: 8px;
+      position: absolute; left: 16px;
+    }
+    .mh-center {
+      display: flex; flex-direction: column; align-items: center; margin: 0 auto; position: relative;
+    }
+    .mh-title {
+      font-size: 16px; font-weight: 700; color: #262626; letter-spacing: 0.5px;
+    }
+    .mh-subtitle {
+      font-size: 11px; color: var(--primary); margin-top: 1px;
+    }
+    .mh-right {
+      display: flex; align-items: center; gap: 4px;
+      position: absolute; right: 16px;
+    }
+
+    .toggle-btn {
+      width: 38px; height: 38px; border-radius: var(--radius);
+      background: rgba(94,234,212,0.1); color: var(--primary);
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.25s; position: relative; overflow: hidden;
+    }
+    .toggle-btn:hover {
+      background: var(--primary); color: white;
+      transform: scale(1.05); box-shadow: 0 3px 10px rgba(20,184,166,0.25);
+    }
+    .toggle-btn svg { width: 18px; height: 18px; transition: transform 0.3s; }
+
+    .h-btn {
+      width: 36px; height: 36px; border-radius: var(--radius);
+      color: #636363;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s; position: relative; overflow: hidden;
+    }
+    .h-btn:hover { background: rgba(94,234,212,0.1); color: var(--primary); transform: translateY(-1px); }
+    .h-btn svg { width: 18px; height: 18px; }
+
+    /* ===== Music Content ===== */
+    .music-body {
+      flex: 1; overflow-y: auto;
+      padding: 0 24px 100px;
+      display: flex; flex-direction: column;
+      background:
+        radial-gradient(ellipse at 30% 20%, rgba(94,234,212,0.04) 0%, transparent 50%),
+        radial-gradient(ellipse at 70% 80%, rgba(45,212,191,0.03) 0%, transparent 50%);
+      position: relative;
+    }
+    .music-body::-webkit-scrollbar { width: 5px; }
+    .music-body::-webkit-scrollbar-thumb { background: rgba(94,234,212,0.2); border-radius: 3px; }
+
+    /* Now Playing Mini Bar (sticky at top of scroll area) */
+    .now-playing {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      margin: 0 -24px;
+      padding: 14px 24px;
+      background: linear-gradient(135deg, rgba(45,212,191,0.95), rgba(13,148,136,0.95));
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      display: flex; align-items: center; gap: 14px;
+      box-shadow: 0 4px 20px rgba(20,184,166,0.25);
+    }
+    .np-cover {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #F0FDFA, #CCFBF1);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      position: relative;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.15);
+      animation: spin 8s linear infinite;
+      animation-play-state: paused;
+    }
+    .now-playing.playing .np-cover { animation-play-state: running; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .np-cover::after {
+      content: '';
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: rgba(13,148,136,0.6);
+      position: absolute;
+    }
+    .np-cover svg { width: 20px; height: 20px; color: var(--primary-600); position: relative; z-index: 1; }
+
+    .np-info {
+      flex: 1; min-width: 0;
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .np-title {
+      font-size: 14px; font-weight: 700; color: white;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .np-artist {
+      font-size: 12px; color: rgba(255,255,255,0.85);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .np-progress {
+      height: 3px;
+      background: rgba(255,255,255,0.25);
+      border-radius: 2px;
+      width: 100%;
+      margin-top: 2px;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .np-progress-bar {
+      height: 100%;
+      width: 35%;
+      background: white;
+      border-radius: 2px;
+      transition: width 0.3s;
+    }
+
+    .np-play {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.25);
+      color: white;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.25s;
+      flex-shrink: 0;
+      position: relative; overflow: hidden;
+      backdrop-filter: blur(4px);
+    }
+    .np-play:hover { background: white; color: var(--primary-600); transform: scale(1.08); }
+    .np-play svg { width: 18px; height: 18px; }
+
+    .content-wrap {
+      padding-top: 22px;
+      display: flex; flex-direction: column; gap: 22px;
+    }
+
+    /* Category tabs */
+    .cat-tabs {
+      display: flex; gap: 10px;
+      overflow-x: auto; padding: 2px 0;
+      scrollbar-width: none;
+    }
+    .cat-tabs::-webkit-scrollbar { display: none; }
+    .cat-tab {
+      padding: 7px 20px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.7);
+      border: 1px solid rgba(94,234,212,0.2);
+      font-size: 13px; color: #525252;
+      font-weight: 500;
+      transition: all 0.25s;
+      position: relative; overflow: hidden;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .cat-tab:hover { background: rgba(94,234,212,0.12); color: var(--primary-600); border-color: rgba(94,234,212,0.3); }
+    .cat-tab.active {
+      background: linear-gradient(135deg, var(--primary-400), var(--primary-600));
+      color: white; border-color: transparent;
+      box-shadow: 0 3px 10px rgba(20,184,166,0.25);
+    }
+
+    /* Section title */
+    .section-head {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .section-title {
+      font-size: 17px; font-weight: 700; color: #262626;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .section-title::before {
+      content: ''; width: 4px; height: 18px;
+      background: linear-gradient(180deg, var(--primary-400), var(--primary-600));
+      border-radius: 2px;
+    }
+    .section-more {
+      font-size: 12px; color: #8C8C8C;
+      display: flex; align-items: center; gap: 2px;
+      padding: 4px 8px; border-radius: 8px;
+      transition: all 0.2s;
+    }
+    .section-more:hover { color: var(--primary); background: rgba(94,234,212,0.1); }
+    .section-more svg { width: 14px; height: 14px; }
+
+    /* Playlists horizontal scroll */
+    .playlist-scroll {
+      display: flex; gap: 14px;
+      overflow-x: auto; padding: 2px 2px 8px;
+      scrollbar-width: none;
+    }
+    .playlist-scroll::-webkit-scrollbar { display: none; }
+
+    .playlist-card {
+      flex-shrink: 0;
+      width: 160px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .playlist-card:hover { transform: translateY(-4px); }
+    .playlist-cover {
+      width: 160px; height: 160px;
+      border-radius: 12px;
+      margin-bottom: 10px;
+      display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      transition: box-shadow 0.3s;
+    }
+    .playlist-card:hover .playlist-cover { box-shadow: 0 10px 28px rgba(20,184,166,0.2); }
+    .playlist-cover::before {
+      content: ''; position: absolute; inset: 0;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3) 0%, transparent 50%),
+        repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.05) 10px, rgba(255,255,255,0.05) 20px);
+    }
+    .playlist-cover .play-overlay {
+      position: absolute; right: 10px; bottom: 10px;
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.9);
+      color: var(--primary-600);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; transform: translateY(6px);
+      transition: all 0.3s;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+    }
+    .playlist-card:hover .play-overlay { opacity: 1; transform: translateY(0); }
+    .playlist-cover .play-overlay svg { width: 16px; height: 16px; }
+    .playlist-cover .note-icon {
+      position: relative; z-index: 1;
+      width: 56px; height: 56px;
+      color: rgba(255,255,255,0.9);
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.15));
+    }
+    .playlist-name {
+      font-size: 13px; font-weight: 600; color: #262626;
+      margin-bottom: 4px;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .playlist-count {
+      font-size: 11px; color: #8C8C8C;
+      display: flex; align-items: center; gap: 3px;
+    }
+
+    /* Song list */
+    .song-list {
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .song-row {
+      height: 56px;
+      padding: 0 14px;
+      border-radius: 12px;
+      display: flex; align-items: center; gap: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .song-row:hover {
+      background: rgba(94,234,212,0.1);
+    }
+    .song-row.playing {
+      background: linear-gradient(135deg, rgba(94,234,212,0.15), rgba(45,212,191,0.1));
+    }
+    .song-row.playing .song-index { color: var(--primary); }
+    .song-index {
+      width: 20px;
+      font-size: 13px; color: #A3A3A3;
+      text-align: center;
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+    .song-row.playing .song-index {
+      display: flex; align-items: center; justify-content: center;
+    }
+    .song-eq {
+      display: none;
+      gap: 2px; align-items: flex-end;
+      height: 14px;
+    }
+    .song-row.playing .song-eq { display: flex; }
+    .song-row.playing .song-index-num { display: none; }
+    .song-eq span {
+      width: 3px; background: var(--primary); border-radius: 1px;
+      animation: eqBar 0.9s ease-in-out infinite;
+    }
+    .song-eq span:nth-child(1) { height: 40%; animation-delay: 0s; }
+    .song-eq span:nth-child(2) { height: 100%; animation-delay: 0.2s; }
+    .song-eq span:nth-child(3) { height: 60%; animation-delay: 0.4s; }
+    @keyframes eqBar {
+      0%, 100% { height: 30%; }
+      50% { height: 100%; }
+    }
+    .song-cover {
+      width: 40px; height: 40px;
+      border-radius: 8px;
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden;
+    }
+    .song-cover::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.25), transparent);
+    }
+    .song-cover svg { width: 16px; height: 16px; color: rgba(255,255,255,0.85); position: relative; z-index: 1; }
+    .song-info {
+      flex: 1; min-width: 0;
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    .song-name {
+      font-size: 14px; font-weight: 600; color: #262626;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .song-row.playing .song-name { color: var(--primary-600); }
+    .song-artist {
+      font-size: 12px; color: #8C8C8C;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .song-duration {
+      font-size: 12px; color: #A3A3A3;
+      flex-shrink: 0;
+      min-width: 36px; text-align: right;
+    }
+    .song-play-btn {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      color: var(--primary-600);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; transform: scale(0.8);
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .song-row:hover .song-play-btn, .song-row.playing .song-play-btn {
+      opacity: 1; transform: scale(1);
+    }
+    .song-play-btn:hover { background: rgba(94,234,212,0.15); }
+    .song-play-btn svg { width: 14px; height: 14px; }
+    .song-more {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      color: #B8B8B8;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .song-row:hover .song-more { opacity: 1; }
+    .song-more:hover { background: rgba(94,234,212,0.12); color: var(--primary); }
+    .song-more svg { width: 14px; height: 14px; }
+
+    /* Audiobooks grid */
+    .audiobook-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+    .ab-card {
+      border-radius: 16px;
+      background: white;
+      padding: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+      border: 1px solid rgba(255,255,255,0.8);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+      position: relative; overflow: hidden;
+    }
+    .ab-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 28px rgba(20,184,166,0.12);
+    }
+    .ab-cover {
+      height: 130px;
+      border-radius: 12px;
+      margin-bottom: 10px;
+      display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden;
+    }
+    .ab-cover::before {
+      content: ''; position: absolute; inset: 0;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3) 0%, transparent 50%),
+        repeating-linear-gradient(-45deg, transparent, transparent 8px, rgba(255,255,255,0.06) 8px, rgba(255,255,255,0.06) 16px);
+    }
+    .ab-deco {
+      position: absolute; top: 10px; right: 10px;
+      width: 28px; height: 28px; border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+    }
+    .ab-icon {
+      position: relative; z-index: 1;
+      width: 48px; height: 48px;
+      color: rgba(255,255,255,0.9);
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.15));
+    }
+    .ab-name {
+      font-size: 13px; font-weight: 700; color: #262626;
+      margin-bottom: 3px;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .ab-author {
+      font-size: 11px; color: #8C8C8C;
+      margin-bottom: 8px;
+    }
+    .ab-meta {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .ab-eps {
+      font-size: 11px; color: var(--primary-600); font-weight: 600;
+    }
+    .ab-rating {
+      display: flex; align-items: center; gap: 2px;
+      font-size: 11px; color: #FBBF24;
+    }
+
+    /* ===== Ripple ===== */
+    .ripple {
+      position: absolute; border-radius: 50%;
+      background: rgba(255,255,255,0.4);
+      transform: scale(0);
+      animation: rippleAnim 0.5s ease-out;
+      pointer-events: none;
+    }
+    @keyframes rippleAnim { to { transform: scale(3); opacity: 0; } }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 1100px) {
+      .audiobook-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 768px) {
+      .drawer {
+        position: absolute; top: 4px; left: 4px; bottom: 4px;
+        width: calc(100% - 8px); max-width: 320px; margin: 0;
+        transform: translateX(-110%);
+        transition: transform var(--transition);
+        z-index: 15; border-radius: var(--radius-lg);
+      }
+      .drawer.open { transform: translateX(0); }
+      .drawer.collapsed {
+        width: calc(100% - 8px); max-width: 320px;
+        opacity: 1; transform: translateX(-110%);
+      }
+      .drawer.open.collapsed { transform: translateX(0); }
+      .drawer-inner { width: 100%; max-width: 320px; }
+      .side-menu { top: 4px; bottom: 4px; left: 4px; }
+      .main { margin: 4px; border-radius: 16px; }
+      .music-body { padding: 0 14px 90px; }
+      .now-playing { margin: 0 -14px; padding: 12px 14px; }
+      .content-wrap { padding-top: 18px; gap: 18px; }
+      .audiobook-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+      .song-more { display: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- Overlay -->
+  <div class="overlay" id="overlay"></div>
+
+  <!-- ===== Side Menu ===== -->
+  <aside class="side-menu" id="sideMenu">
+    <div class="menu-header">
+      <div class="menu-logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+          <path d="M8 10h.01" stroke-width="3" stroke-linecap="round"/>
+          <path d="M12 10h.01" stroke-width="3" stroke-linecap="round"/>
+          <path d="M16 10h.01" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="menu-brand">
+        <div class="name">青聊 Lytalk</div>
+        <div class="slogan">轻盈沟通，畅快生活</div>
+      </div>
+      <button class="menu-close" id="menuClose">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div class="menu-list">
+      <button class="menu-item" data-action="chat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span>消息</span>
+        <span class="badge">8</span>
+      </button>
+      <button class="menu-item" data-action="notes">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <span>便签</span>
+      </button>
+      <button class="menu-item" data-action="moments">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+        <span>动态</span>
+      </button>
+      <button class="menu-item" data-action="read">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        <span>T读</span>
+      </button>
+      <button class="menu-item" data-action="game">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="11" x2="10" y2="11"/><line x1="8" y1="9" x2="8" y2="13"/><line x1="15" y1="12" x2="15.01" y2="12"/><line x1="18" y1="10" x2="18.01" y2="10"/><path d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.151A4 4 0 0 0 17.32 5z"/></svg>
+        <span>T游</span>
+      </button>
+      <button class="menu-item active" data-action="music">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+        <span>T听</span>
+      </button>
+      <button class="menu-item" data-action="video">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+        <span>T视</span>
+      </button>
+
+      <div class="menu-divider"></div>
+
+      <button class="menu-item" data-action="planet">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><ellipse cx="12" cy="12" rx="10" ry="4"/></svg>
+        <span>星球</span>
+      </button>
+      <button class="menu-item" data-action="idrome">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+        <span>iDrome</span>
+      </button>
+      <button class="menu-item" data-action="tianyu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18M3 6h18M3 18h12"/><circle cx="19" cy="18" r="2"/></svg>
+        <span>田语</span>
+      </button>
+
+      <div class="menu-divider"></div>
+      <div class="menu-group-label" style="padding:8px 14px 4px;font-size:11px;color:#9CA3AF;letter-spacing:1px;">工具箱</div>
+      <button class="menu-item" onclick="window.location.href='weather.html'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+        <span>天气</span>
+      </button>
+      <button class="menu-item" onclick="window.location.href='calendar.html'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span>日历</span>
+      </button>
+      <button class="menu-item" onclick="window.location.href='clock.html'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span>时钟</span>
+      </button>
+
+      <div class="menu-divider"></div>
+
+      <button class="menu-item add-friend" data-action="add-friend">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+        <span>添加好友</span>
+      </button>
+    </div>
+
+    <div class="menu-footer">
+      <button class="menu-item" data-action="settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span>设置</span>
+      </button>
+      <button class="menu-item" data-action="profile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>我的</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ===== Friend Drawer ===== -->
+  <aside class="drawer" id="drawer">
+    <div class="drawer-inner">
+      <div class="drawer-top">
+        <button class="logo-btn" id="logoBtn" title="菜单">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+            <path d="M8 10h.01" stroke-width="3" stroke-linecap="round"/>
+            <path d="M12 10h.01" stroke-width="3" stroke-linecap="round"/>
+            <path d="M16 10h.01" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <div class="search-wrap">
+          <input type="text" placeholder="搜索好友、音乐..."/>
+          <svg class="s-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <button class="search-filter-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="drawer-list">
+        <div class="self-item">
+          <div class="av">我<span class="dot"></span></div>
+          <div class="info">
+            <div class="nm">我自己</div>
+            <div class="st">正在听《晴天》</div>
+          </div>
+        </div>
+
+        <input type="checkbox" id="g1" class="grp-toggle" checked>
+        <label for="g1" class="grp-label">
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          <span>群聊</span><span class="cnt">(3)</span>
+        </label>
+        <div class="grp-items">
+          <div class="f-item group">
+            <div class="av" style="background:linear-gradient(135deg,#60A5FA,#3B82F6);">前</div>
+            <div class="info">
+              <div class="nr"><span class="nm">前端开发群</span><span class="tm">09:43</span></div>
+              <div class="pr"><span class="pv">分享了一首新歌</span><span class="bd">5</span></div>
+            </div>
+          </div>
+          <div class="f-item group">
+            <div class="av" style="background:linear-gradient(135deg,#F472B6,#EC4899);">家</div>
+            <div class="info">
+              <div class="nr"><span class="nm">家庭群</span><span class="tm">11:00</span></div>
+              <div class="pr"><span class="pv">妈妈：这首歌真好听</span></div>
+            </div>
+          </div>
+          <div class="f-item group">
+            <div class="av" style="background:linear-gradient(135deg,#A78BFA,#8B5CF6);">产</div>
+            <div class="info">
+              <div class="nr"><span class="nm">产品讨论组</span><span class="tm">昨天</span></div>
+              <div class="pr"><span class="pv">推荐一个播客</span><span class="bd">9</span></div>
+            </div>
+          </div>
+        </div>
+
+        <input type="checkbox" id="g2" class="grp-toggle" checked>
+        <label for="g2" class="grp-label">
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          <span>特别关心</span><span class="cnt">(2)</span>
+          <svg class="star" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </label>
+        <div class="grp-items">
+          <div class="f-item sel">
+            <div class="av" style="background:linear-gradient(135deg,#5EEAD4,#14B8A6);">夏<span class="dot on"></span></div>
+            <div class="info">
+              <div class="nr"><span class="nm">小夏</span><span class="tm">10:32</span></div>
+              <div class="pr"><span class="pv">这首歌超治愈！</span><span class="bd pm">2</span></div>
+            </div>
+            <button class="more-dots"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+          </div>
+          <div class="f-item">
+            <div class="av" style="background:linear-gradient(135deg,#FCD34D,#F59E0B);">杰<span class="dot on"></span></div>
+            <div class="info">
+              <div class="nr"><span class="nm">阿杰</span><span class="tm">昨天</span></div>
+              <div class="pr"><span class="pv">新专辑不错</span></div>
+            </div>
+            <button class="more-dots"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+          </div>
+        </div>
+
+        <input type="checkbox" id="g3" class="grp-toggle" checked>
+        <label for="g3" class="grp-label">
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          <span>我的好友</span><span class="cnt">(6)</span>
+        </label>
+        <div class="grp-items">
+          <div class="f-item">
+            <div class="av" style="background:linear-gradient(135deg,#F9A8D4,#EC4899);">婷<span class="dot aw"></span></div>
+            <div class="info">
+              <div class="nr"><span class="nm">婷婷</span><span class="tm">前天</span></div>
+              <div class="pr"><span class="pv">[分享] 一首好歌</span></div>
+            </div>
+            <button class="more-dots"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+          </div>
+          <div class="f-item">
+            <div class="av" style="background:linear-gradient(135deg,#93C5FD,#3B82F6);">王<span class="dot off"></span></div>
+            <div class="info">
+              <div class="nr"><span class="nm">小王</span></div>
+              <div class="pr"><span class="pv">有声书听完了</span></div>
+            </div>
+            <button class="more-dots"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+          </div>
+          <div class="f-item">
+            <div class="av" style="background:linear-gradient(135deg,#6EE7B7,#10B981);">明<span class="dot on"></span></div>
+            <div class="info">
+              <div class="nr"><span class="nm">小明</span></div>
+              <div class="pr"><span class="pv">在听什么歌？</span></div>
+            </div>
+            <button class="more-dots"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+          </div>
+          <div class="f-item">
+            <div class="av" style="background:linear-gradient(135deg,#FCA5A5,#EF4444);">李<span class="dot by"></span></div>
+            <div class="info">
+              <div class="nr"><span class="nm">小李</span></div>
+              <div class="pr"><span class="pv">推荐个播客呗</span></div>
+            </div>
+            <button class="more-dots"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+          </div>
+          <div class="f-item">
+            <div class="av" style="background:linear-gradient(135deg,#C4B5FD,#8B5CF6);">张<span class="dot aw"></span></div>
+            <div class="info">
+              <div class="nr"><span class="nm">小张</span></div>
+              <div class="pr"><span class="pv">这首歌太燃了</span></div>
+            </div>
+            <button class="more-dots"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+          </div>
+          <div class="f-item">
+            <div class="av" style="background:linear-gradient(135deg,#FDE68A,#D97706);">赵<span class="dot off"></span></div>
+            <div class="info">
+              <div class="nr"><span class="nm">小赵</span></div>
+              <div class="pr"><span class="pv">电台节目更新了</span></div>
+            </div>
+            <button class="more-dots"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+          </div>
+        </div>
+        <div style="height:20px;"></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ===== Main Content ===== -->
+  <main class="main">
+    <header class="main-header">
+      <div class="mh-left">
+        <button class="toggle-btn" id="toggleDrawer" title="收起/展开好友列表">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+      </div>
+      <div class="mh-center">
+        <div class="mh-title">T听</div>
+        <div class="mh-subtitle">听见美好</div>
+      </div>
+      <div class="mh-right">
+        <button class="h-btn" id="searchBtn" title="搜索">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </button>
+        <button class="h-btn" id="historyBtn" title="播放历史">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="music-body">
+
+      <!-- Now Playing -->
+      <div class="now-playing playing" id="nowPlaying">
+        <div class="np-cover" id="npCover" style="background:linear-gradient(135deg,#F0FDFA,#CCFBF1);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+        </div>
+        <div class="np-info">
+          <div class="np-title" id="npTitle">晴天</div>
+          <div class="np-artist" id="npArtist">周杰伦</div>
+          <div class="np-progress"><div class="np-progress-bar" id="npBar"></div></div>
+        </div>
+        <button class="np-play" id="npPlay" title="播放/暂停">
+          <svg id="npPlayIcon" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+        </button>
+      </div>
+
+      <div class="content-wrap">
+
+        <!-- Category tabs -->
+        <div class="cat-tabs" id="catTabs">
+          <button class="cat-tab active" data-cat="all">推荐</button>
+          <button class="cat-tab" data-cat="music">音乐</button>
+          <button class="cat-tab" data-cat="audiobook">有声书</button>
+          <button class="cat-tab" data-cat="podcast">播客</button>
+          <button class="cat-tab" data-cat="radio">电台</button>
+        </div>
+
+        <!-- Recommended Playlists -->
+        <div>
+          <div class="section-head">
+            <div class="section-title">推荐歌单</div>
+            <button class="section-more">
+              全部
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+          <div class="playlist-scroll" style="margin-top:14px;">
+
+            <div class="playlist-card">
+              <div class="playlist-cover" style="background:linear-gradient(135deg,#5EEAD4,#0D9488);">
+                <svg class="note-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                <div class="play-overlay"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+              </div>
+              <div class="playlist-name">夏日薄荷</div>
+              <div class="playlist-count">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                42首
+              </div>
+            </div>
+
+            <div class="playlist-card">
+              <div class="playlist-cover" style="background:linear-gradient(135deg,#F472B6,#DB2777);">
+                <svg class="note-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                <div class="play-overlay"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+              </div>
+              <div class="playlist-name">甜蜜情歌</div>
+              <div class="playlist-count">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                58首
+              </div>
+            </div>
+
+            <div class="playlist-card">
+              <div class="playlist-cover" style="background:linear-gradient(135deg,#60A5FA,#2563EB);">
+                <svg class="note-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                <div class="play-overlay"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+              </div>
+              <div class="playlist-name">深夜蓝调</div>
+              <div class="playlist-count">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                36首
+              </div>
+            </div>
+
+            <div class="playlist-card">
+              <div class="playlist-cover" style="background:linear-gradient(135deg,#FBBF24,#D97706);">
+                <svg class="note-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                <div class="play-overlay"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+              </div>
+              <div class="playlist-name">经典回忆</div>
+              <div class="playlist-count">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                75首
+              </div>
+            </div>
+
+            <div class="playlist-card">
+              <div class="playlist-cover" style="background:linear-gradient(135deg,#A78BFA,#7C3AED);">
+                <svg class="note-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                <div class="play-overlay"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+              </div>
+              <div class="playlist-name">电子节拍</div>
+              <div class="playlist-count">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                63首
+              </div>
+            </div>
+
+            <div class="playlist-card">
+              <div class="playlist-cover" style="background:linear-gradient(135deg,#34D399,#059669);">
+                <svg class="note-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                <div class="play-overlay"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+              </div>
+              <div class="playlist-name">运动燃脂</div>
+              <div class="playlist-count">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                48首
+              </div>
+            </div>
+
+            <div class="playlist-card">
+              <div class="playlist-cover" style="background:linear-gradient(135deg,#FB923C,#EA580C);">
+                <svg class="note-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                <div class="play-overlay"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+              </div>
+              <div class="playlist-name">民谣故事</div>
+              <div class="playlist-count">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                52首
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Hot Songs -->
+        <div>
+          <div class="section-head">
+            <div class="section-title">热门歌曲</div>
+            <button class="section-more">
+              全部
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+          <div class="song-list" id="songList" style="margin-top:10px;">
+
+            <div class="song-row playing" data-title="晴天" data-artist="周杰伦" data-cover="linear-gradient(135deg,#5EEAD4,#0D9488)">
+              <div class="song-index"><span class="song-index-num">1</span><div class="song-eq"><span></span><span></span><span></span></div></div>
+              <div class="song-cover" style="background:linear-gradient(135deg,#5EEAD4,#0D9488);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+              </div>
+              <div class="song-info">
+                <div class="song-name">晴天</div>
+                <div class="song-artist">周杰伦</div>
+              </div>
+              <div class="song-duration">4:29</div>
+              <button class="song-play-btn" title="播放">
+                <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              </button>
+              <button class="song-more" title="更多"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+            </div>
+
+            <div class="song-row" data-title="稻香" data-artist="周杰伦" data-cover="linear-gradient(135deg,#FBBF24,#D97706)">
+              <div class="song-index"><span class="song-index-num">2</span><div class="song-eq"><span></span><span></span><span></span></div></div>
+              <div class="song-cover" style="background:linear-gradient(135deg,#FBBF24,#D97706);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+              </div>
+              <div class="song-info">
+                <div class="song-name">稻香</div>
+                <div class="song-artist">周杰伦</div>
+              </div>
+              <div class="song-duration">3:43</div>
+              <button class="song-play-btn" title="播放">
+                <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              </button>
+              <button class="song-more" title="更多"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+            </div>
+
+            <div class="song-row" data-title="起风了" data-artist="买辣椒也用券" data-cover="linear-gradient(135deg,#60A5FA,#2563EB)">
+              <div class="song-index"><span class="song-index-num">3</span><div class="song-eq"><span></span><span></span><span></span></div></div>
+              <div class="song-cover" style="background:linear-gradient(135deg,#60A5FA,#2563EB);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+              </div>
+              <div class="song-info">
+                <div class="song-name">起风了</div>
+                <div class="song-artist">买辣椒也用券</div>
+              </div>
+              <div class="song-duration">5:26</div>
+              <button class="song-play-btn" title="播放">
+                <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              </button>
+              <button class="song-more" title="更多"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+            </div>
+
+            <div class="song-row" data-title="小幸运" data-artist="田馥甄" data-cover="linear-gradient(135deg,#F472B6,#DB2777)">
+              <div class="song-index"><span class="song-index-num">4</span><div class="song-eq"><span></span><span></span><span></span></div></div>
+              <div class="song-cover" style="background:linear-gradient(135deg,#F472B6,#DB2777);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+              </div>
+              <div class="song-info">
+                <div class="song-name">小幸运</div>
+                <div class="song-artist">田馥甄</div>
+              </div>
+              <div class="song-duration">4:08</div>
+              <button class="song-play-btn" title="播放">
+                <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              </button>
+              <button class="song-more" title="更多"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+            </div>
+
+            <div class="song-row" data-title="海阔天空" data-artist="Beyond" data-cover="linear-gradient(135deg,#38BDF8,#0284C7)">
+              <div class="song-index"><span class="song-index-num">5</span><div class="song-eq"><span></span><span></span><span></span></div></div>
+              <div class="song-cover" style="background:linear-gradient(135deg,#38BDF8,#0284C7);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+              </div>
+              <div class="song-info">
+                <div class="song-name">海阔天空</div>
+                <div class="song-artist">Beyond</div>
+              </div>
+              <div class="song-duration">5:25</div>
+              <button class="song-play-btn" title="播放">
+                <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              </button>
+              <button class="song-more" title="更多"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+            </div>
+
+            <div class="song-row" data-title="光年之外" data-artist="邓紫棋" data-cover="linear-gradient(135deg,#A78BFA,#7C3AED)">
+              <div class="song-index"><span class="song-index-num">6</span><div class="song-eq"><span></span><span></span><span></span></div></div>
+              <div class="song-cover" style="background:linear-gradient(135deg,#A78BFA,#7C3AED);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+              </div>
+              <div class="song-info">
+                <div class="song-name">光年之外</div>
+                <div class="song-artist">邓紫棋</div>
+              </div>
+              <div class="song-duration">3:55</div>
+              <button class="song-play-btn" title="播放">
+                <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              </button>
+              <button class="song-more" title="更多"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+            </div>
+
+            <div class="song-row" data-title="成都" data-artist="赵雷" data-cover="linear-gradient(135deg,#34D399,#059669)">
+              <div class="song-index"><span class="song-index-num">7</span><div class="song-eq"><span></span><span></span><span></span></div></div>
+              <div class="song-cover" style="background:linear-gradient(135deg,#34D399,#059669);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+              </div>
+              <div class="song-info">
+                <div class="song-name">成都</div>
+                <div class="song-artist">赵雷</div>
+              </div>
+              <div class="song-duration">5:28</div>
+              <button class="song-play-btn" title="播放">
+                <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              </button>
+              <button class="song-more" title="更多"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+            </div>
+
+            <div class="song-row" data-title="夜曲" data-artist="周杰伦" data-cover="linear-gradient(135deg,#1E293B,#334155)">
+              <div class="song-index"><span class="song-index-num">8</span><div class="song-eq"><span></span><span></span><span></span></div></div>
+              <div class="song-cover" style="background:linear-gradient(135deg,#1E293B,#334155);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+              </div>
+              <div class="song-info">
+                <div class="song-name">夜曲</div>
+                <div class="song-artist">周杰伦</div>
+              </div>
+              <div class="song-duration">3:48</div>
+              <button class="song-play-btn" title="播放">
+                <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              </button>
+              <button class="song-more" title="更多"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+            </div>
+
+            <div class="song-row" data-title="后来" data-artist="刘若英" data-cover="linear-gradient(135deg,#F87171,#DC2626)">
+              <div class="song-index"><span class="song-index-num">9</span><div class="song-eq"><span></span><span></span><span></span></div></div>
+              <div class="song-cover" style="background:linear-gradient(135deg,#F87171,#DC2626);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+              </div>
+              <div class="song-info">
+                <div class="song-name">后来</div>
+                <div class="song-artist">刘若英</div>
+              </div>
+              <div class="song-duration">5:41</div>
+              <button class="song-play-btn" title="播放">
+                <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              </button>
+              <button class="song-more" title="更多"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+            </div>
+
+            <div class="song-row" data-title="告白气球" data-artist="周杰伦" data-cover="linear-gradient(135deg,#F9A8D4,#EC4899)">
+              <div class="song-index"><span class="song-index-num">10</span><div class="song-eq"><span></span><span></span><span></span></div></div>
+              <div class="song-cover" style="background:linear-gradient(135deg,#F9A8D4,#EC4899);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+              </div>
+              <div class="song-info">
+                <div class="song-name">告白气球</div>
+                <div class="song-artist">周杰伦</div>
+              </div>
+              <div class="song-duration">3:35</div>
+              <button class="song-play-btn" title="播放">
+                <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              </button>
+              <button class="song-more" title="更多"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Audiobooks -->
+        <div>
+          <div class="section-head">
+            <div class="section-title">有声书推荐</div>
+            <button class="section-more">
+              全部
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+          <div class="audiobook-grid" style="margin-top:14px;">
+
+            <div class="ab-card">
+              <div class="ab-cover" style="background:linear-gradient(135deg,#5EEAD4 0%,#0D9488 100%);">
+                <div class="ab-deco"></div>
+                <svg class="ab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+              </div>
+              <div class="ab-name">三体</div>
+              <div class="ab-author">刘慈欣 著 / 哈哈笑 演播</div>
+              <div class="ab-meta">
+                <span class="ab-eps">共186集</span>
+                <span class="ab-rating">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  4.9
+                </span>
+              </div>
+            </div>
+
+            <div class="ab-card">
+              <div class="ab-cover" style="background:linear-gradient(135deg,#F472B6 0%,#DB2777 100%);">
+                <div class="ab-deco"></div>
+                <svg class="ab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+              </div>
+              <div class="ab-name">活着</div>
+              <div class="ab-author">余华 著 / 李野墨 演播</div>
+              <div class="ab-meta">
+                <span class="ab-eps">共62集</span>
+                <span class="ab-rating">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  4.8
+                </span>
+              </div>
+            </div>
+
+            <div class="ab-card">
+              <div class="ab-cover" style="background:linear-gradient(135deg,#60A5FA 0%,#2563EB 100%);">
+                <div class="ab-deco"></div>
+                <svg class="ab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+              </div>
+              <div class="ab-name">百年孤独</div>
+              <div class="ab-author">马尔克斯 著 / 王明军 演播</div>
+              <div class="ab-meta">
+                <span class="ab-eps">共124集</span>
+                <span class="ab-rating">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  4.9
+                </span>
+              </div>
+            </div>
+
+            <div class="ab-card">
+              <div class="ab-cover" style="background:linear-gradient(135deg,#FBBF24 0%,#D97706 100%);">
+                <div class="ab-deco"></div>
+                <svg class="ab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+              </div>
+              <div class="ab-name">明朝那些事儿</div>
+              <div class="ab-author">当年明月 著 / 王更新 演播</div>
+              <div class="ab-meta">
+                <span class="ab-eps">共268集</span>
+                <span class="ab-rating">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  4.8
+                </span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div style="height:10px;"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+(function() {
+  const drawer = document.getElementById('drawer');
+  const overlay = document.getElementById('overlay');
+  const sideMenu = document.getElementById('sideMenu');
+  const logoBtn = document.getElementById('logoBtn');
+  const menuClose = document.getElementById('menuClose');
+  const toggleBtn = document.getElementById('toggleDrawer');
+  const isMobile = () => window.innerWidth <= 768;
+
+  /* ---- Ripple ---- */
+  function addRipple(btn, e) {
+    const rect = btn.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    const r = document.createElement('span');
+    r.className = 'ripple';
+    r.style.cssText = 'width:'+size+'px;height:'+size+'px;left:'+(e.clientX-rect.left-size/2)+'px;top:'+(e.clientY-rect.top-size/2)+'px;';
+    btn.style.position = 'relative'; btn.style.overflow = 'hidden';
+    btn.appendChild(r);
+    setTimeout(() => r.remove(), 500);
+  }
+  document.querySelectorAll('button').forEach(b => {
+    b.addEventListener('click', function(e) { addRipple(this, e); });
+  });
+
+  /* ---- Side Menu ---- */
+  function openMenu() {
+    sideMenu.classList.add('open');
+    overlay.classList.add('show');
+    if (isMobile()) drawer.classList.remove('open');
+  }
+  function closeMenu() {
+    sideMenu.classList.remove('open');
+    overlay.classList.remove('show');
+  }
+  logoBtn.addEventListener('click', openMenu);
+  menuClose.addEventListener('click', closeMenu);
+  overlay.addEventListener('click', () => {
+    closeMenu();
+    if (isMobile()) drawer.classList.remove('open');
+  });
+
+  /* ---- Drawer toggle ---- */
+  function toggleDrawer() {
+    if (isMobile()) {
+      drawer.classList.toggle('open');
+      overlay.classList.toggle('show', drawer.classList.contains('open'));
+    } else {
+      drawer.classList.toggle('collapsed');
+      const icon = toggleBtn.querySelector('svg');
+      icon.style.transform = drawer.classList.contains('collapsed') ? 'rotate(180deg)' : '';
+    }
+  }
+  toggleBtn.addEventListener('click', toggleDrawer);
+
+  /* ---- Menu items ---- */
+  document.querySelectorAll('.menu-item').forEach(item => {
+    item.addEventListener('click', () => {
+      document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+      item.classList.add('active');
+      setTimeout(closeMenu, 200);
+    });
+  });
+
+  /* ---- Friend item selection ---- */
+  document.querySelectorAll('.f-item').forEach(item => {
+    item.addEventListener('click', (e) => {
+      if (e.target.closest('.more-dots')) return;
+      document.querySelectorAll('.f-item').forEach(f => f.classList.remove('sel'));
+      item.classList.add('sel');
+      if (isMobile()) { drawer.classList.remove('open'); overlay.classList.remove('show'); }
+    });
+  });
+
+  /* ---- Category tabs ---- */
+  const catTabs = document.querySelectorAll('.cat-tab');
+  catTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      catTabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+    });
+  });
+
+  /* ---- Now Playing Logic ---- */
+  const nowPlaying = document.getElementById('nowPlaying');
+  const npCover = document.getElementById('npCover');
+  const npTitle = document.getElementById('npTitle');
+  const npArtist = document.getElementById('npArtist');
+  const npPlay = document.getElementById('npPlay');
+  const npPlayIcon = document.getElementById('npPlayIcon');
+  const npBar = document.getElementById('npBar');
+  const songRows = document.querySelectorAll('.song-row');
+  let isPlaying = true;
+  let progress = 35;
+
+  const playIconSVG = '<polygon points="5 3 19 12 5 21 5 3"/>';
+  const pauseIconSVG = '<rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/>';
+
+  function setPlaying(playing) {
+    isPlaying = playing;
+    npPlayIcon.innerHTML = isPlaying ? pauseIconSVG : playIconSVG;
+    nowPlaying.classList.toggle('playing', isPlaying);
+  }
+
+  npPlay.addEventListener('click', (e) => {
+    e.stopPropagation();
+    setPlaying(!isPlaying);
+  });
+
+  // Progress simulation
+  setInterval(() => {
+    if (isPlaying) {
+      progress += 0.3;
+      if (progress > 100) progress = 0;
+      npBar.style.width = progress + '%';
+    }
+  }, 500);
+
+  // Song row click
+  songRows.forEach(row => {
+    row.addEventListener('click', (e) => {
+      if (e.target.closest('.song-more')) return;
+      const title = row.dataset.title;
+      const artist = row.dataset.artist;
+      const cover = row.dataset.cover;
+
+      songRows.forEach(r => r.classList.remove('playing'));
+      row.classList.add('playing');
+
+      npTitle.textContent = title;
+      npArtist.textContent = artist;
+      npCover.style.background = cover;
+
+      progress = 0;
+      npBar.style.width = '0%';
+      setPlaying(true);
+    });
+  });
+
+  /* ---- History button toggle ---- */
+  const historyBtn = document.getElementById('historyBtn');
+  historyBtn.addEventListener('click', () => {
+    historyBtn.classList.toggle('active');
+  });
+
+  /* ---- Escape key ---- */
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { closeMenu(); if(isMobile()) drawer.classList.remove('open'); }
+  });
+})();
+</script>
+</body>
+</html>
