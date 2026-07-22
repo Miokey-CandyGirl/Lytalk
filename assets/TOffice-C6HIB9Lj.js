@@ -1,0 +1,1 @@
+import{C as o}from"./ComingSoon-CgumEqBF.js";import{c as e,o as r}from"./vue-vendor-CvXjVBgp.js";import"./PageHeader-B4PkahFb.js";import"./_plugin-vue_export-helper-DlAUqK2U.js";const _={__name:"TOffice",setup(t){return(a,c)=>(r(),e(o,{"page-name":"办公"}))}};export{_ as default};

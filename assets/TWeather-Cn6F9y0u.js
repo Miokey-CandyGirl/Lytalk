@@ -1,0 +1,1 @@
+import{C as o}from"./ComingSoon-CgumEqBF.js";import{c as e,o as r}from"./vue-vendor-CvXjVBgp.js";import"./PageHeader-B4PkahFb.js";import"./_plugin-vue_export-helper-DlAUqK2U.js";const _={__name:"TWeather",setup(t){return(a,m)=>(r(),e(o,{"page-name":"天气"}))}};export{_ as default};

@@ -1,0 +1,1 @@
+import{C as o}from"./ComingSoon-CgumEqBF.js";import{c as r,o as e}from"./vue-vendor-CvXjVBgp.js";import"./PageHeader-B4PkahFb.js";import"./_plugin-vue_export-helper-DlAUqK2U.js";const _={__name:"TMusic",setup(t){return(a,c)=>(e(),r(o,{"page-name":"T听"}))}};export{_ as default};

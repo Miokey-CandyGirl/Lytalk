@@ -1,0 +1,1 @@
+import{C as o}from"./ComingSoon-CgumEqBF.js";import{c as r,o as e}from"./vue-vendor-CvXjVBgp.js";import"./PageHeader-B4PkahFb.js";import"./_plugin-vue_export-helper-DlAUqK2U.js";const _={__name:"TShoping",setup(t){return(a,p)=>(e(),r(o,{"page-name":"购物"}))}};export{_ as default};
